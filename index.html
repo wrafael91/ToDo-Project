@@ -1,20 +1,49 @@
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>To-Do List</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <div class="container">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Podríamos agregar Font Awesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
             <h1>To-Do List</h1>
-            <div class="input-group">
-                <input type="text" id="taskInput" placeholder="Agregar una tarea...">
-                <button id="addTaskBtn">Agregar</button>
+        </header>
+        
+        <main>
+            <form id="taskForm" class="input-group">
+                <input type="text" id="taskInput" placeholder="Agregar una tarea..." required>
+                <input type="date" id="dueDate">
+                <select id="priority">
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                </select>
+                <button type="submit" id="addTaskBtn">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+            </form>
+
+            <div class="filters">
+                <input type="text" id="searchTask" placeholder="Buscar tareas...">
+                <select id="filterStatus">
+                    <option value="todas">Todas</option>
+                    <option value="pendientes">Pendientes</option>
+                    <option value="completadas">Completadas</option>
+                </select>
             </div>
-            <ul id="taskList"></ul>
-        </div>
-        <script src="script.js"></script>
-    </body>
-    </html>
+
+            <ul id="taskList" class="task-list"></ul>
+        </main>
+
+        <footer>
+            <p>Tareas pendientes: <span id="pendingTasks">0</span></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
