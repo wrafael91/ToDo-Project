@@ -9,7 +9,17 @@
     --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Reset básico */
+/* Modo oscuro */
+body.dark-mode {
+    --bg-color: #121212;
+    --white: #1e1e1e;
+    --task-bg: #2e2e2e;
+    --completed-bg: #1b5e20;
+    --completed-text: #ffffff;
+    --shadow-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -25,6 +35,7 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 20px;
+    transition: background-color 0.3s ease;
 }
 
 .container {
@@ -34,59 +45,65 @@ body {
     border-radius: 12px;
     width: 100%;
     max-width: 600px;
+    transition: background-color 0.3s ease;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
 h1 {
     color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    font-size: 2rem;
+    margin: 0;
+}
+
+.dark-mode-toggle {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--primary-color);
+    padding: 5px;
 }
 
 .input-group {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    flex-wrap: wrap;
 }
 
 input, select {
-    flex: 1;
     padding: 12px;
     border: 2px solid var(--primary-color);
     border-radius: 6px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    background-color: var(--white);
+    color: inherit;
 }
 
-input:focus, select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+input {
+    flex: 1;
+}
+
+select {
+    width: 100px;
 }
 
 button {
     background-color: var(--primary-color);
-    color: var(--white);
+    color: white;
     border: none;
     padding: 12px 20px;
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.3s ease;
-    font-weight: 600;
 }
 
 button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-2px);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-.filters {
-    margin: 1rem 0;
-    display: flex;
-    gap: 10px;
 }
 
 ul {
@@ -102,39 +119,98 @@ li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s ease;
     animation: slideIn 0.3s ease;
-}
-
-li:hover {
-    transform: translateX(5px);
+    transition: all 0.3s ease;
 }
 
 li.completed {
     background: var(--completed-bg);
-    text-decoration: line-through;
     color: var(--completed-text);
+    text-decoration: line-through;
 }
 
-/* Animaciones */
+.task-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.priority-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+.priority-baja { background-color: #8bc34a; color: white; }
+.priority-media { background-color: #ffc107; color: black; }
+.priority-alta { background-color: #f44336; color: white; }
+
+footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-counts {
+    display: flex;
+    gap: 20px;
+}
+
+.export-import {
+    display: flex;
+    gap: 10px;
+}
+
+.import-label {
+    cursor: pointer;
+    padding: 12px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    animation: fadeInOut 3s ease;
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateY(-10px);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 
-/* Media Queries */
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(10px); }
+    10%, 90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(10px); }
+}
+
 @media (max-width: 480px) {
     .input-group {
         flex-direction: column;
     }
     
-    button {
+    select {
         width: 100%;
+    }
+    
+    footer {
+        flex-direction: column;
+        gap: 15px;
     }
 }

@@ -1,99 +1,81 @@
-// Clase para manejar las tareas
-class Task {
-    constructor(id, text, dueDate = null, priority = 'baja', completed = false) {
-        this.id = id;
-        this.text = text;
-        this.dueDate = dueDate;
-        this.priority = priority;
-        this.completed = completed;
-        this.createdAt = new Date();
-    }
-}
-
-// Clase principal de la aplicación
 class TodoApp {
     constructor() {
         this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        this.initializeElements();
+        this.initializeEventListeners();
+        this.loadDarkModePreference();
+        this.renderTasks();
+        this.updateTaskCounts();
+    }
+
+    initializeElements() {
         this.taskForm = document.getElementById('taskForm');
         this.taskInput = document.getElementById('taskInput');
         this.taskList = document.getElementById('taskList');
-        this.searchInput = document.getElementById('searchTask');
-        this.filterStatus = document.getElementById('filterStatus');
-        this.pendingTasksCount = document.getElementById('pendingTasks');
-        
-        this.initializeEventListeners();
-        this.renderTasks();
-        this.updatePendingCount();
+        this.prioritySelect = document.getElementById('priority');
+        this.darkModeToggle = document.getElementById('toggleDarkMode');
+        this.exportBtn = document.getElementById('exportTasksBtn');
+        this.importInput = document.getElementById('importTasksInput');
     }
 
     initializeEventListeners() {
-        // Evento para agregar tarea
         this.taskForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.addTask();
         });
 
-        // Evento para búsqueda
-        this.searchInput.addEventListener('input', () => this.filterTasks());
-
-        // Evento para filtrado
-        this.filterStatus.addEventListener('change', () => this.filterTasks());
+        this.darkModeToggle.addEventListener('click', () => this.toggleDarkMode());
+        this.exportBtn.addEventListener('click', () => this.exportTasks());
+        this.importInput.addEventListener('change', (e) => this.importTasks(e));
     }
 
     addTask() {
         const text = this.taskInput.value.trim();
-        const dueDate = document.getElementById('dueDate').value;
-        const priority = document.getElementById('priority').value;
-
         if (text === '') return;
 
-        const newTask = new Task(
-            Date.now(),
-            text,
-            dueDate,
-            priority
-        );
+        const task = {
+            id: Date.now(),
+            text: text,
+            completed: false,
+            priority: this.prioritySelect.value,
+            createdAt: new Date()
+        };
 
-        this.tasks.push(newTask);
+        this.tasks.push(task);
         this.saveTasks();
-        this.renderTask(newTask);
-        this.updatePendingCount();
+        this.renderTask(task);
+        this.updateTaskCounts();
+        this.showNotification('Tarea agregada');
 
         this.taskInput.value = '';
-        document.getElementById('dueDate').value = '';
     }
 
     renderTask(task) {
         const li = document.createElement('li');
         li.dataset.id = task.id;
-        li.className = `task-item priority-${task.priority}${task.completed ? ' completed' : ''}`;
+        li.className = task.completed ? 'completed' : '';
 
         li.innerHTML = `
             <div class="task-content">
-                <input type="checkbox" ${task.completed ? 'checked' : ''}>
                 <span class="task-text">${task.text}</span>
-                ${task.dueDate ? `<span class="due-date">Fecha límite: ${new Date(task.dueDate).toLocaleDateString()}</span>` : ''}
-                <span class="priority-badge">${task.priority}</span>
+                <span class="priority-badge priority-${task.priority}">${task.priority}</span>
             </div>
             <div class="task-actions">
-                <button class="edit-btn"><i class="fas fa-edit"></i></button>
-                <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                <button class="complete-btn">
+                    <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
+                </button>
+                <button class="delete-btn">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         `;
 
-        // Eventos para los botones
-        li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+        li.querySelector('.complete-btn').addEventListener('click', () => {
             this.toggleTaskStatus(task.id);
         });
 
-        li.querySelector('.delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
+        li.querySelector('.delete-btn').addEventListener('click', () => {
             this.deleteTask(task.id);
-        });
-
-        li.querySelector('.edit-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.editTask(task.id);
         });
 
         this.taskList.appendChild(li);
@@ -101,24 +83,7 @@ class TodoApp {
 
     renderTasks() {
         this.taskList.innerHTML = '';
-        this.filterTasks();
-    }
-
-    filterTasks() {
-        const searchTerm = this.searchInput.value.toLowerCase();
-        const filterValue = this.filterStatus.value;
-
-        const filteredTasks = this.tasks.filter(task => {
-            const matchesSearch = task.text.toLowerCase().includes(searchTerm);
-            const matchesFilter = filterValue === 'todas' || 
-                (filterValue === 'completadas' && task.completed) ||
-                (filterValue === 'pendientes' && !task.completed);
-
-            return matchesSearch && matchesFilter;
-        });
-
-        this.taskList.innerHTML = '';
-        filteredTasks.forEach(task => this.renderTask(task));
+        this.tasks.forEach(task => this.renderTask(task));
     }
 
     toggleTaskStatus(taskId) {
@@ -127,34 +92,89 @@ class TodoApp {
             task.completed = !task.completed;
             this.saveTasks();
             this.renderTasks();
-            this.updatePendingCount();
+            this.updateTaskCounts();
+            this.showNotification(task.completed ? 'Tarea completada' : 'Tarea pendiente');
         }
     }
 
     deleteTask(taskId) {
         if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-            this.tasks = this.tasks.filter(task => task.id !== taskId);
-            this.saveTasks();
-            this.renderTasks();
-            this.updatePendingCount();
-        }
-    }
-
-    editTask(taskId) {
-        const task = this.tasks.find(t => t.id === taskId);
-        if (task) {
-            const newText = prompt('Editar tarea:', task.text);
-            if (newText !== null && newText.trim() !== '') {
-                task.text = newText.trim();
+            const taskElement = document.querySelector(`li[data-id="${taskId}"]`);
+            taskElement.classList.add('removing');
+            
+            setTimeout(() => {
+                this.tasks = this.tasks.filter(task => task.id !== taskId);
                 this.saveTasks();
                 this.renderTasks();
-            }
+                this.updateTaskCounts();
+                this.showNotification('Tarea eliminada');
+            }, 300);
         }
     }
 
-    updatePendingCount() {
+    updateTaskCounts() {
         const pendingCount = this.tasks.filter(task => !task.completed).length;
-        this.pendingTasksCount.textContent = pendingCount;
+        const completedCount = this.tasks.filter(task => task.completed).length;
+        
+        document.getElementById('pendingTasks').textContent = pendingCount;
+        document.getElementById('completedTasks').textContent = completedCount;
+    }
+
+    toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDarkMode);
+        this.darkModeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+
+    loadDarkModePreference() {
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            this.darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+    }
+
+    exportTasks() {
+        const dataStr = JSON.stringify(this.tasks, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tareas.json';
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        this.showNotification('Tareas exportadas');
+    }
+
+    importTasks(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedTasks = JSON.parse(e.target.result);
+                this.tasks = [...this.tasks, ...importedTasks];
+                this.saveTasks();
+                this.renderTasks();
+                this.updateTaskCounts();
+                this.showNotification('Tareas importadas');
+            } catch (error) {
+                this.showNotification('Error al importar tareas', true);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    showNotification(message, isError = false) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${isError ? 'error' : ''}`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
     }
 
     saveTasks() {
